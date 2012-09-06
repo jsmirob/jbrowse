@@ -90,7 +90,7 @@ var HTMLFeatures = declare( BlockBased,
                 }
             },
             events: {
-                click: this.config.style.linkTemplate
+                click: (this.config.style||{}).linkTemplate
                     ? { action: "newWindow", url: this.config.style.linkTemplate }
                     : { action: "contentDialog", content: dojo.hitch( this, 'defaultFeatureDetail' ) }
             },
@@ -122,9 +122,9 @@ var HTMLFeatures = declare( BlockBased,
         }).call(this);
         this.eventHandlers.click = this._makeClickHandler( this.eventHandlers.click );
 
-        this.labelScale = this.featureStore.density * this.config.style.labelScale;
-        this.subfeatureScale = this.featureStore.density * this.config.style.subfeatureScale;
-        this.descriptionScale = this.featureStore.density * this.config.style.descriptionScale;;
+        this.labelScale = this.featureStore.getDensity() * this.config.style.labelScale;
+        this.subfeatureScale = this.featureStore.getDensity() * this.config.style.subfeatureScale;
+        this.descriptionScale = this.featureStore.getDensity() * this.config.style.descriptionScale;;
     },
 
     /**
@@ -360,7 +360,7 @@ var HTMLFeatures = declare( BlockBased,
         // only update the label once for each block size
         var blockBases = Math.abs( leftBase-rightBase );
         if( this._updatedLabelForBlockSize != blockBases ){
-            if ( scale < (this.featureStore.density * this.config.style.histScale)) {
+            if ( scale < (this.featureStore.getDensity() * this.config.style.histScale)) {
                 this.setLabel(this.key + "<br>per " + Util.addCommas( Math.round( blockBases / this.numBins)) + " bp");
             } else {
                 this.setLabel(this.key);
@@ -370,7 +370,7 @@ var HTMLFeatures = declare( BlockBased,
 
         //console.log("scale: %d, histScale: %d", scale, this.histScale);
         if (this.featureStore.histograms &&
-            (scale < (this.featureStore.density * this.config.style.histScale)) ) {
+            (scale < (this.featureStore.getDensity() * this.config.style.histScale)) ) {
 	    this.fillHist(blockIndex, block, leftBase, rightBase, stripeWidth,
                           containerStart, containerEnd);
         } else {
@@ -511,11 +511,7 @@ var HTMLFeatures = declare( BlockBased,
         }
 
         var curTrack = this;
-        var featCallback = dojo.hitch(this,function(feature, path) {
-            //uniqueId is a stringification of the path in the NCList where
-            //the feature lives; it's unique across the top-level NCList
-            //(the top-level NCList covers a track/chromosome combination)
-            var uniqueId = path.join(",");
+        var featCallback = dojo.hitch(this,function(feature, uniqueId ) {
             if( ! this._featureIsRendered( uniqueId ) ) {
                 this.renderFeature( feature, uniqueId, block, scale,
                                     containerStart, containerEnd, block );

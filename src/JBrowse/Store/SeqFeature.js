@@ -1,5 +1,6 @@
-define( ['JBrowse/Store'],
-        function( Store ) {
+define( ['dojo/_base/declare',
+         'JBrowse/Store'],
+        function( declare, Store ) {
 
 /**
  * Base class for JBrowse data backends that hold sequences and
@@ -11,17 +12,16 @@ define( ['JBrowse/Store'],
  * @constructor
  */
 
-function SeqFeatureStore(args) {
-    Store.call(this, args);
+return declare(Store,{
+    constructor: function(args) {
+        if( !args ) return;
+        this.loaded  = args.loaded;
+        this.changed = args.changeCallback || function() {};
+        this.refSeq = args.refSeq;
+    },
 
-    if( !args ) return;
-
-    this.loaded  = args.loaded;
-    this.changed = args.changeCallback || function() {};
-};
-
-SeqFeatureStore.prototype = new Store('');
-
-return SeqFeatureStore;
-
+    getDensity: function() {
+        return this.density || 0;
+    }
+});
 });

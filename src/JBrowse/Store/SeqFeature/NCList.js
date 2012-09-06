@@ -15,7 +15,7 @@ var NCList = function(args) {
     if( !args )
         return;
 
-    this.nclist = this.makeNCList();
+    this.nclist = this._makeNCList();
 
     this.baseUrl = args.baseUrl;
     this.urlTemplates = { tracklist: args.urlTemplate };
@@ -24,7 +24,7 @@ var NCList = function(args) {
 
 NCList.prototype = new SeqFeatureStore();
 
-NCList.prototype.makeNCList = function() {
+NCList.prototype._makeNCList = function() {
     return new GenericNCList();
 };
 
@@ -86,7 +86,6 @@ NCList.prototype.histogram = function() {
     return this.nclist.histogram.apply( this.nclist, arguments );
 };
 
-
 NCList.prototype.iterate = function( startBase, endBase, origFeatCallback, finishCallback ) {
     var that = this;
     var accessors    = this.attrs.accessors(),
@@ -94,7 +93,10 @@ NCList.prototype.iterate = function( startBase, endBase, origFeatCallback, finis
         featCallBack = function( feature, path ) {
             that._add_getters( accessors.get, feature );
             feature.tags = accessors.tags;
-            return origFeatCallback( feature, path );
+            //uniqueId is a stringification of the path in the NCList where
+            //the feature lives; it's unique across the top-level NCList
+            //(the top-level NCList covers a track/chromosome combination)
+            return origFeatCallback( feature, path.join(',') );
         };
 
     return this.nclist.iterate.call( this.nclist, startBase, endBase, featCallBack, finishCallback );

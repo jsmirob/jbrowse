@@ -91,7 +91,7 @@ return declare( SFNCList,
         return SFNCList.prototype.loadSuccess.call( this, trackInfo, url );
     },
 
-    makeNCList: function() {
+    _makeNCList: function() {
         return new GenericNCList();
     },
 
@@ -121,12 +121,12 @@ return declare( SFNCList,
             else
                 return undefined;
         },
-        featCallBack = function( feature, path ) {
+        featCallBack = function( feature, uniqueId ) {
             feature.get = get;
             dojo.forEach( feature.get('subfeatures'), function(f) {
                               f.get = subget;
                           });
-            return origFeatCallback( feature, path );
+            return origFeatCallback( feature, uniqueId );
         };
 
         return this.nclist.iterate.call( this.nclist, startBase, endBase, featCallBack, finishCallback );
