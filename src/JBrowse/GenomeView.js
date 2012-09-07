@@ -1549,13 +1549,10 @@ GenomeView.prototype.renderTrack = function( /**Object*/ trackConfig ) {
     }
 
     require( [ storeClass, trackClass ], dojo.hitch(this,function( storeClass, trackClass ) {
-
-        var store = new storeClass({
-            urlTemplate: trackConfig.urlTemplate,
-            compress: trackConfig.compress,
-            baseUrl: trackConfig.baseUrl,
+        var conf = dojo.clone( trackConfig );
+        var store = new storeClass( dojo.mixin( dojo.clone(trackConfig), {
             refSeq: this.ref
-        });
+        }));
 
         var track = new trackClass({
                 refSeq: this.ref,
