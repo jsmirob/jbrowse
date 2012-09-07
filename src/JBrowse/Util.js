@@ -90,7 +90,7 @@ Util = {
      *                 e.g., 'htp://foo/someurl?arg=valueforbaz'
      */
     fillTemplate: function(template, fillWith) {
-        return template.replace(/\{([^}]+)\}/g,
+        return template.replace(/\{(\w+)\}/g,
                                 function(match, group) {
                                     if (fillWith[group] !== undefined)
                                         return fillWith[group];
