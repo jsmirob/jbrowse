@@ -24,6 +24,7 @@ return declare( SeqFeatureStore,
         this.url = this.urlTemplate;
         this.refSeq = args.refSeq;
         this.baseUrl = args.baseUrl;
+        this.density = 0;
         this.url = Util.resolveUrl(
             this.baseUrl,
             Util.fillTemplate( args.urlTemplate,
@@ -31,21 +32,8 @@ return declare( SeqFeatureStore,
                              )
         );
         this.queryTemplate = args.queryTemplate ||
-            " PREFIX pos:<https://github.com/dbcls/bh12/wiki/Feature-Annotation-Location-Description-Ontology#>"
-            + " PREFIX up:<http://purl.uniprot.org/core/>"
-            + " SELECT ?start ?end"
-            + " WHERE {"
-            + "  ?protein up:encodedBy ?gene ."
-            + "  ?gene pos:locationOn ?location ."
-            + "  ?location pos:begin ?sp ."
-            + "  ?location pos:end ?ep."
-            + "  ?sp a pos:Position ."
-            + "  ?sp pos:position ?start ."
-            + "  ?ep a pos:Position ."
-            + "  ?ep pos:position ?end ."
-            + "  FILTER( ?start <= {start} && ?end >= {end} ) ."
-            + " }"
-        ;
+"PREFIX xsd:<http://www.w3.org/2001/XMLSchema#> PREFIX  rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#> PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#> PREFIX pos:<http://phenomebrowser.net/gff3/#> SELECT ?id ?name ?type ?start ?end ?strand WHERE { ?id rdf:type ?te . ?te rdfs:label ?type .  ?id pos:location ?location . ?location pos:start ?sp .  ?sp pos:position ?start . ?location pos:end ?ep . ?ep pos:position ?end . ?sp rdf:type ?spt . ?spt rdf:label ?strand . ?id rdfs:label ?name . FILTER( !(?start > {end} || ?end < {start}) ) . FILTER( ?type = \"gene\"^^xsd:string )  }";
+
     },
 
     load: function() {
@@ -77,9 +65,7 @@ return declare( SeqFeatureStore,
         dojo.xhrGet({ url: this.url+'?'+ioQuery.objectToQuery({
                           query: this._makeQuery( startBase, endBase )
                       }),
-                      headers: {
-                          "Accept": "application/json"
-                      },
+                      headers: { "Accept": "application/json" },
                       handleAs: "json",
                       failOk: true,
                       load:  Util.debugHandler( this, function(o) {
