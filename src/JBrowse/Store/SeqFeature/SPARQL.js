@@ -15,6 +15,11 @@ return declare( SeqFeatureStore,
  */
 {
 
+
+    /**
+     * JBrowse feature backend to retrieve features from a SPARQL endpoint.
+     * @constructs
+     */
     constructor: function(args) {
         this.url = this.urlTemplate;
         this.refSeq = args.refSeq;
@@ -47,9 +52,9 @@ return declare( SeqFeatureStore,
         // ping the endpoint to see if it's there
         dojo.xhrGet({ url: this.url+'?'+ioQuery.objectToQuery({ query: 'SELECT ?s WHERE { ?s ?p ?o } LIMIT 1' }),
                       handleAs: "text",
-                      failOk: true,
+                      failOk: false,
                       load:  Util.debugHandler( this, function(o) { this.loadSuccess(o); }),
-                      error: dojo.hitch( this, function(error) { this.loadFail(error, url); } )
+                      error: dojo.hitch( this, function(error) { this.loadFail(error, this.url); } )
         });
     },
 
@@ -81,11 +86,7 @@ return declare( SeqFeatureStore,
                           this._resultsToFeatures(o, origFeatCallback);
                           finishCallback();
                       }),
-                      error: dojo.hitch( this, function(error) {
-                                             if( error.status != 404 )
-                                                 console.error(''+error);
-                                             this.loadFail(error, url);
-                                         })
+                      error: dojo.hitch( this, function(error) { this.loadFail(error, this.url); })
         });
     },
 
@@ -94,6 +95,13 @@ return declare( SeqFeatureStore,
         if( ! rows.length )
             return;
         var fields = results.head.vars;
+        var requiredFields = ['start','end','strand','id'];
+        for( var i = 0; i<4; i++ ) {
+            if( fields.indexOf( requiredFields[i] ) == -1 ) {
+                console.error("Required field "+requiredFields[i]+" missing from feature data");
+                return;
+            }
+        };
         var get  = function(n) { return this[n]; };
         var tags = function() { return fields;   };
         dojo.forEach( rows, function( row ) {
