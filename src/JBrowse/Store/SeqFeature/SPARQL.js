@@ -25,6 +25,22 @@ return declare( SeqFeatureStore,
                                { 'refseq': this.refSeq.name }
                              )
         );
+        this.queryTemplate = args.queryTemplate ||
+            " PREFIX pos:<https://github.com/dbcls/bh12/wiki/Feature-Annotation-Location-Description-Ontology#>"
+            + " PREFIX up:<http://purl.uniprot.org/core/>"
+            + " SELECT ?start ?end"
+            + " WHERE {"
+            + "  ?protein up:encodedBy ?gene ."
+            + "  ?gene pos:locationOn ?location ."
+            + "  ?location pos:begin ?sp ."
+            + "  ?location pos:end ?ep."
+            + "  ?sp a pos:Position ."
+            + "  ?sp pos:position ?start ."
+            + "  ?ep a pos:Position ."
+            + "  ?ep pos:position ?end ."
+            + "  FILTER( ?start <= {start} && ?end >= {end} ) ."
+            + " }"
+        ;
     },
 
     load: function() {
@@ -33,20 +49,12 @@ return declare( SeqFeatureStore,
                       handleAs: "text",
                       failOk: true,
                       load:  Util.debugHandler( this, function(o) { this.loadSuccess(o); }),
-                      error: dojo.hitch( this, function(error) {
-                                             if( error.status != 404 )
-                                                 console.error(''+error);
-                                             this.loadFail(error, url);
-                                         })
+                      error: dojo.hitch( this, function(error) { this.loadFail(error, url); } )
         });
     },
 
     _makeQuery: function( startBase, endBase ) {
-        return "select ?p where { ?p a <foo> }";
-        return "SELECT ?type ?start ?end ?strand ?note"
-            + "WHERE {"
-            + "}"
-        ;
+        return Util.fillTemplate( this.queryTemplate, { start: startBase, end: endBase, refseq: this.refSeq.name } );
     },
 
     loadSuccess: function( o ) {
@@ -64,6 +72,9 @@ return declare( SeqFeatureStore,
         dojo.xhrGet({ url: this.url+'?'+ioQuery.objectToQuery({
                           query: this._makeQuery( startBase, endBase )
                       }),
+                      headers: {
+                          "Accept": "application/json"
+                      },
                       handleAs: "json",
                       failOk: true,
                       load:  Util.debugHandler( this, function(o) {
@@ -82,17 +93,16 @@ return declare( SeqFeatureStore,
         var rows = ((results||{}).results||{}).bindings || [];
         if( ! rows.length )
             return;
-        var get = function(n) { return this[n]; };
+        var fields = results.head.vars;
+        var get  = function(n) { return this[n]; };
+        var tags = function() { return fields;   };
         dojo.forEach( rows, function( row ) {
-            var f = {
-                start:  row.start.value,
-                end:    row.end.value,
-                strand: row.strand.value,
-                id:     row.id.value,
-                get:    get
-            };
-            featCallback( f, row.id.value );
-        });
+            var f = { get: get, tags: tags };
+            dojo.forEach( fields, function(field) {
+                f[field] = row[field].value;
+            });
+            featCallback( f, f.id );
+        },this);
     }
 });
 
