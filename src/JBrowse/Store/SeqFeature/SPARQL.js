@@ -1,12 +1,9 @@
 define([ 'dojo/_base/declare',
          'JBrowse/Store/SeqFeature',
          'JBrowse/Util',
-         'JBrowse/Model/ArrayRepr',
-         'JBrowse/Store/NCList',
-         'JBrowse/Store/LazyArray',
          'dojo/io-query'
        ],
-       function( declare, SeqFeatureStore, Util, ArrayRepr, GenericNCList, LazyArray, ioQuery ) {
+       function( declare, SeqFeatureStore, Util, ioQuery ) {
 
 return declare( SeqFeatureStore,
 
