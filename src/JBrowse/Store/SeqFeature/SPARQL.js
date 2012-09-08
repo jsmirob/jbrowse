@@ -28,9 +28,10 @@ return declare( SeqFeatureStore,
                                { 'refseq': this.refSeq.name }
                              )
         );
-        this.queryTemplate = args.queryTemplate ||
-"PREFIX xsd:<http://www.w3.org/2001/XMLSchema#> PREFIX  rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#> PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#> PREFIX pos:<http://phenomebrowser.net/gff3/#> SELECT ?id ?name ?type ?start ?end ?strand WHERE { ?id rdf:type ?te . ?te rdfs:label ?type .  ?id pos:location ?location . ?location pos:start ?sp .  ?sp pos:position ?start . ?location pos:end ?ep . ?ep pos:position ?end . ?sp rdf:type ?spt . ?spt rdf:label ?strand . ?id rdfs:label ?name . FILTER( !(?start > {end} || ?end < {start}) ) . FILTER( ?type = \"gene\"^^xsd:string )  }";
-
+        this.queryTemplate = args.queryTemplate;
+        if( ! this.queryTemplate ) {
+            console.error("No queryTemplate set for SPARQL backend, no data will be displayed");
+        }
     },
 
     load: function() {
@@ -57,20 +58,23 @@ return declare( SeqFeatureStore,
         this.setLoaded();
     },
 
-    iterate: function( startBase, endBase, origFeatCallback, finishCallback ) {
-        // ping the endpoint to see if it's there
-        dojo.xhrGet({ url: this.url+'?'+ioQuery.objectToQuery({
-                          query: this._makeQuery( startBase, endBase )
-                      }),
-                      headers: { "Accept": "application/json" },
-                      handleAs: "json",
-                      failOk: true,
-                      load:  Util.debugHandler( this, function(o) {
-                          this._resultsToFeatures(o, origFeatCallback);
-                          finishCallback();
-                      }),
-                      error: dojo.hitch( this, function(error) { this.loadFail(error, this.url); })
-        });
+    iterate: function( startBase, endBase, featCallback, finishCallback ) {
+        if( this.queryTemplate ) {
+            dojo.xhrGet({ url: this.url+'?'+ioQuery.objectToQuery({
+                              query: this._makeQuery( startBase, endBase )
+                          }),
+                          headers: { "Accept": "application/json" },
+                          handleAs: "json",
+                          failOk: true,
+                          load:  Util.debugHandler( this, function(o) {
+                              this._resultsToFeatures( o, featCallback );
+                              finishCallback();
+                          }),
+                          error: dojo.hitch( this, function(error) { this.loadFail(error, this.url); })
+            });
+        } else {
+            finishCallback();
+        }
     },
 
     _resultsToFeatures: function( results, featCallback ) {
