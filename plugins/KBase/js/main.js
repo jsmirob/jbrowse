@@ -8,7 +8,7 @@ define(
 return declare( JBPlugin, {
 
     constructor: function() {
-        this.cdmi_load = requestScript.get({url:"src/KBase/CDMI.js"});        
+        this.cdmi_load = requestScript.get({url:"plugins/KBase/js/CDMI.js"});        
         console.log(this.cdmi_load);
     }
    // does nothing KBase-specific right now
