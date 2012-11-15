@@ -13,9 +13,19 @@ return declare( RESTStore,
      * @constructs
      */
     constructor: function(args) {
+        console.log("Constructor");
+
+        this.browser.getPlugin("KBase", function(kbase) { 
+            kbase.cdmi_load.then(function () {
+                //run CDMI function code
+                console.log(arguments);
+                
+                this.cdmi_api = new CDMI_API("http://www.kbase.us/services/cdmi_api");
+	    })
+        });
     },
 
-    _getGlobalStats: function() {
+    _getGlobalStats: function( finishCallback, errorCallback ) {
         // retrieve data using XHRs to populate this.globalStats like:
         //  this.globalStats = {
         //     featureDensity: featureCount/refSeqLength
@@ -25,6 +35,8 @@ return declare( RESTStore,
         //  this._deferred.stats.resolve({success: true});
         //  and
         //  this._deferred.features.resolve({success: true});
+
+        console.log("_getGlobalStats")
     },
 
     _getFeatures: function( query, featCallback, finishCallback, errorCallback ) {
@@ -42,6 +54,23 @@ return declare( RESTStore,
          *      id: unique id of the feature
          *    });
          */
+
+
+        //Get genome based on kbase id
+        console.log(query);
+
+        console.log(this.config);
+                
+        features = this.cdmi_api.genomes_to_fids(["kb|g.0"], [])["kb|g.0"];
+
+        console.log(features);
+
+        feature_data = this.cdmi_api.fids_to_feature_data(features);
+
+        var test = new SimpleFeature({data: {start: 0, end: 100, strand: 1, name: "test feature"}, id: "kb|g.0.peg.28"});
+
+        featCallback(test);
+        finishCallback();
     }
 });
 
